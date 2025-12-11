@@ -76,6 +76,17 @@ TEMPLATES = [
     },
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",                  # local dev React
+    "http://127.0.0.1:3000",                  # local dev React
+    "https://election-frontend-blush.vercel.app",  # production frontend
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_HEADERS = True
+
+
 WSGI_APPLICATION = "election.wsgi.application"
 
 # -------------------------
