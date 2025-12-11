@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg-info/
+
+# Virtual environment
+venv/
+env/
+
+# Django
+*.sqlite3
+/staticfiles/
+/media/
+
+# Environment variables
+.env
+.env.local
+
+# VS Code
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+*.so
+*.dll
+*.dylib
+
+# Logs
+*.log
+
+# Cache
+.cache/
