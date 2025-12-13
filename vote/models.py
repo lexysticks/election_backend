@@ -11,8 +11,8 @@ ELECTION_TYPES = (
 
 class Candidate(models.Model):
     election_type = models.CharField(max_length=20, choices=ELECTION_TYPES,db_index=True)
-    name = models.CharField(max_length=100)
-    party = models.CharField(max_length=100)
+    name = models.CharField(max_length=100,db_index=True)
+    party = models.CharField(max_length=100,db_index=True)
     party_image = CloudinaryField("party_image")
     age = models.IntegerField()
     image = CloudinaryField("image")
@@ -28,8 +28,8 @@ class Candidate(models.Model):
 
 
 class PartyVoteCount(models.Model):
-    election_type = models.CharField(max_length=20, choices=ELECTION_TYPES)
-    party = models.CharField(max_length=100)
+    election_type = models.CharField(max_length=20, choices=ELECTION_TYPES,db_index=True)
+    party = models.CharField(max_length=100,db_index=True)
     vote_count = models.PositiveIntegerField(default=0)
     party_image = CloudinaryField("party_image", null=True, blank=True)
     

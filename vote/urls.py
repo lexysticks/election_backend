@@ -1,8 +1,9 @@
+
 from django.urls import path
-from . import views
+from .views import CandidateListView, PartyVoteCountListView, CastVoteView
 
 urlpatterns = [
-    path("candidates/<str:election_type>/", views.get_candidates, name="get_candidates"),
-    path("party-votes/<str:election_type>/", views.get_party_votes, name="get_party_votes"),
-    path("cast/", views.cast_vote, name="cast_vote"),
+    path('candidates/<str:election_type>/', CandidateListView.as_view(), name='candidates-list'),
+    path('party_votes/<str:election_type>/', PartyVoteCountListView.as_view(), name='party-votes-list'),
+    path('vote/', CastVoteView.as_view(), name='cast-vote'),
 ]
