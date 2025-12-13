@@ -3,14 +3,14 @@
 from rest_framework import serializers
 from .models import Candidate, Vote, PartyVoteCount
 
-# ------------------------
-# Candidate Serializer
-# ------------------------
+from rest_framework import serializers
+from .models import Candidate, PartyVoteCount, Vote
+
 class CandidateSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
     party_votes = serializers.SerializerMethodField()
-    user_voted = serializers.SerializerMethodField()  # To track if current user voted
-    party_image_url = serializers.SerializerMethodField()  # NEW
+    user_voted = serializers.SerializerMethodField()
+    party_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Candidate
@@ -23,12 +23,12 @@ class CandidateSerializer(serializers.ModelSerializer):
             "image_url",
             "party_votes",
             "user_voted",
-            "party_image_url",  # include the new field
+            "party_image_url",
         ]
 
     def get_image_url(self, obj):
         if obj.image:
-            return obj.image.url
+            return getattr(obj.image, 'url', None)
         return None
 
     def get_party_votes(self, obj):
@@ -40,15 +40,17 @@ class CandidateSerializer(serializers.ModelSerializer):
 
     def get_user_voted(self, obj):
         request = self.context.get("request")
-        if request and request.user.is_authenticated:
+        user = getattr(request, "user", None)  # Safe check
+        if user and getattr(user, "is_authenticated", False):
             return Vote.objects.filter(
-                user=request.user, election_type=obj.election_type
+                user=user,
+                election_type=obj.election_type
             ).exists()
         return False
 
     def get_party_image_url(self, obj):
         if obj.party_image:
-            return obj.party_image.url
+            return getattr(obj.party_image, "url", None)
         return None
 
 

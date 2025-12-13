@@ -78,13 +78,15 @@ TEMPLATES = [
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",                       
-    "https://election-frontend-blush.vercel.app", 
+    "http://localhost:5173",
+    
+    "https://election-frontend-oa92.vercel.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://election-frontend-blush.vercel.app",
+   "https://election-frontend-oa92.vercel.app",
     "https://election-backend-vmwv.onrender.com",
+    
 ]
 
 CORS_ALLOW_CREDENTIALS = True
