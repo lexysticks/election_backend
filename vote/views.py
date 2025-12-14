@@ -127,3 +127,5 @@ class CastVoteView(APIView):
 
         serializer = CandidateSerializer(candidate, context={"request": request})
         return Response({"message": "Vote submitted successfully!", "candidate": serializer.data}, status=status.HTTP_201_CREATED)
+
+
