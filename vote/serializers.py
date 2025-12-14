@@ -61,13 +61,14 @@ class PartyVoteCountSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartyVoteCount
         fields = ["party", "vote_count", "election_type", "party_image_url"]
-
+    
     def get_party_image_url(self, obj):
-        try:
-            return obj.party_image.url
-        except Exception:
-            return None
+        if obj.party_image:
+            return obj.party_image.url.replace("http://", "https://")
+        return None
 
+
+   
 
 # ------------------------
 # Vote Serializer
