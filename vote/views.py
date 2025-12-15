@@ -1,67 +1,67 @@
-from rest_framework import generics, filters, permissions, status
-from rest_framework.views import APIView
+from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
 from django.core.cache import cache
-from django.db.models import F
-
 from .models import Candidate, PartyVoteCount, Vote
-from .serializers import CandidateSerializer, PartyVoteCountSerializer
+from .serializers import CandidateSerializer, PartyVoteCountSerializer, VoteSerializer
 
-
-# ------------------------
-# Candidate List
-# ------------------------
+# -----------------------------
+# Candidate List View with Cache
+# -----------------------------
 class CandidateListView(generics.ListAPIView):
     serializer_class = CandidateSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'party']
-    ordering_fields = ['name', 'age']
-    ordering = ['name']
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        election_type = self.kwargs.get("election_type", "").lower()
+        return Candidate.objects.filter(election_type__iexact=election_type).order_by("name")
 
     def list(self, request, *args, **kwargs):
-        election_type = self.kwargs.get('election_type', '').lower()
-        query_string = request.GET.urlencode()
-        cache_key = f"candidates_{election_type}_{query_string}"
+        election_type = self.kwargs.get("election_type", "").lower()
+        cache_key = f"candidates_{election_type}_{request.user.id}"
 
         cached_data = cache.get(cache_key)
         if cached_data:
             return Response(cached_data)
 
-        queryset = Candidate.objects.filter(
-            election_type__iexact=election_type
-        ).order_by(*self.ordering)
+        queryset = self.get_queryset()
 
-        # Preload PartyVoteCount to reduce DB hits
-        party_votes_qs = PartyVoteCount.objects.filter(election_type__iexact=election_type)
-        party_votes_dict = {
-            (p.election_type, p.party): p.vote_count
-            for p in party_votes_qs
-        }
+        # Prefetch votes by current user
+        user_votes = set(
+            Vote.objects.filter(user=request.user, election_type=election_type)
+            .values_list("candidate_id", flat=True)
+        )
+
+        # Prefetch party votes
+        votes = PartyVoteCount.objects.filter(election_type=election_type)
+        party_votes_dict = {(v.election_type, v.party): v.vote_count for v in votes}
 
         serializer = self.get_serializer(
             queryset,
             many=True,
-            context={"request": request, "party_votes": party_votes_dict}
+            context={"request": request, "user_votes": user_votes, "party_votes": party_votes_dict}
         )
 
-        cache.set(cache_key, serializer.data, timeout=3600)
+        cache.set(cache_key, serializer.data, timeout=3600)  # cache for 1 min
         return Response(serializer.data)
 
 
-# ------------------------
-# Party Vote Count List
-# ------------------------
-class PartyVoteCountListView(generics.ListAPIView):
+# -----------------------------
+# Party Vote List View with Cache
+# -----------------------------
+class PartyVoteListView(generics.ListAPIView):
     serializer_class = PartyVoteCountSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['party']
-    ordering_fields = ['vote_count']
-    ordering = ['-vote_count']
+    search_fields = ["party"]
+    ordering_fields = ["vote_count", "party"]
+    ordering = ["-vote_count"]
+
+    def get_queryset(self):
+        election_type = self.kwargs.get("election_type", "").lower()
+        return PartyVoteCount.objects.filter(election_type__iexact=election_type).order_by("-vote_count", "party")
 
     def list(self, request, *args, **kwargs):
-        election_type = self.kwargs.get('election_type', '').lower()
+        election_type = self.kwargs.get("election_type", "").lower()
         query_string = request.GET.urlencode()
         cache_key = f"party_votes_{election_type}_{query_string}"
 
@@ -69,63 +69,86 @@ class PartyVoteCountListView(generics.ListAPIView):
         if cached_data:
             return Response(cached_data)
 
-        queryset = PartyVoteCount.objects.filter(
-            election_type__iexact=election_type
-        ).order_by('-vote_count')
-
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
 
-        cache.set(cache_key, serializer.data, timeout=3600)
+        cache.set(cache_key, serializer.data, timeout=360)  
         return Response(serializer.data)
 
 
-# ------------------------
-# Cast Vote
-# ------------------------
-class CastVoteView(APIView):
+# -----------------------------
+# Cast Vote View
+# -----------------------------
+
+
+
+
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from django.db.models import F
+from django.core.cache import cache
+from .models import Candidate, PartyVoteCount, Vote
+from .serializers import VoteSerializer
+
+class CastVoteView(generics.CreateAPIView):
+    serializer_class = VoteSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request):
-        candidate_id = request.data.get("candidate")
-        user = request.user
+    def get_serializer_context(self):
+        return {"request": self.request}
 
-        if not candidate_id:
-            return Response({"error": "Candidate ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        try:
-            candidate = Candidate.objects.get(id=candidate_id)
-        except Candidate.DoesNotExist:
-            return Response({"error": "Candidate not found."}, status=status.HTTP_404_NOT_FOUND)
-
+        candidate = Candidate.objects.get(id=serializer.validated_data["candidate_id"])
         election_type = candidate.election_type
 
-        # Prevent multiple votes in same election
-        if Vote.objects.filter(user=user, election_type=election_type).exists():
-            return Response({"error": "You have already voted in this election."}, status=status.HTTP_400_BAD_REQUEST)
+        # ----------------------------
+        # Prevent double voting
+        # ----------------------------
+        if Vote.objects.filter(user=request.user, election_type=election_type).exists():
+            return Response(
+                {"error": "You have already voted in this election."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Create vote safely
-        Vote.objects.create(user=user, candidate=candidate)
+        # ----------------------------
+        # Create vote
+        # ----------------------------
+        Vote.objects.create(
+            user=request.user,
+            candidate=candidate,
+            election_type=election_type
+        )
 
-        # Increment PartyVoteCount safely
-        pvc, created = PartyVoteCount.objects.get_or_create(
+        # ----------------------------
+        # Atomic increment of party vote
+        # ----------------------------
+        party_count, created = PartyVoteCount.objects.get_or_create(
             election_type=election_type,
             party=candidate.party,
-            defaults={"party_image": candidate.party_image, "vote_count": 1}
+            defaults={"party_image": candidate.party_image, "vote_count": 0}
         )
-        if not created:
-            PartyVoteCount.objects.filter(pk=pvc.pk).update(vote_count=F("vote_count") + 1)
-            if not pvc.party_image:
-                pvc.party_image = candidate.party_image
-                pvc.save()
 
-        # Clear cache safely
-        if hasattr(cache, "delete_pattern"):
-            cache.delete_pattern(f"candidates_{election_type}_*")
-            cache.delete_pattern(f"party_votes_{election_type}_*")
-        else:
-            cache.clear()
+        # F() ensures atomic increment
+        PartyVoteCount.objects.filter(id=party_count.id).update(
+            vote_count=F('vote_count') + 1,
+            party_image=candidate.party_image if not party_count.party_image else party_count.party_image
+        )
 
-        serializer = CandidateSerializer(candidate, context={"request": request})
-        return Response({"message": "Vote submitted successfully!", "candidate": serializer.data}, status=status.HTTP_201_CREATED)
+        # ----------------------------
+        # Clear caches
+        # ----------------------------
+        cache.delete(f"candidates_{election_type}_{request.user.id}")
+        try:
+            keys = cache.keys(f"party_votes_{election_type}*")
+            for key in keys:
+                cache.delete(key)
+        except NotImplementedError:
+            cache.delete(f"party_votes_{election_type}_")
 
-
+        return Response(
+            {"message": "Vote submitted successfully!"},
+            status=status.HTTP_201_CREATED
+        )
