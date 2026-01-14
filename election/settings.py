@@ -169,18 +169,22 @@ REST_FRAMEWORK = {
 # ==============================
 # CORS & CSRF (frontend only)
 # ==============================
+# ==============================
+# CORS & CSRF (TESTING ONLY)
+# ==============================
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",      # dev frontend
-    "https://www.voteng.live",    # production frontend
-]
+# Allow all origins (equivalent to "*")
+CORS_ALLOW_ALL_ORIGINS = True
 
+# IMPORTANT:
+# When using "*", credentials MUST be disabled
+CORS_ALLOW_CREDENTIALS = False
+
+# CSRF (still needed for admin & forms)
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "https://www.voteng.live",
 ]
-
-CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -201,6 +205,39 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",      # dev frontend
+#     "https://www.voteng.live",    # production frontend
+# ]
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:5173",
+#     "https://www.voteng.live",
+# ]
+
+# CORS_ALLOW_CREDENTIALS = True
+
+# CORS_ALLOW_METHODS = [
+#     "DELETE",
+#     "GET",
+#     "OPTIONS",
+#     "PATCH",
+#     "POST",
+#     "PUT",
+# ]
+
+# CORS_ALLOW_HEADERS = [
+#     "accept",
+#     "accept-encoding",
+#     "authorization",
+#     "content-type",
+#     "origin",
+#     "user-agent",
+#     "x-csrftoken",
+#     "x-requested-with",
+# ]
 
 # ==============================
 # LANGUAGE / TIME
