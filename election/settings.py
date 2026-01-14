@@ -4,7 +4,6 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from decouple import config
 import cloudinary
-import dj_database_url
 
 # Load environment variables
 load_dotenv()
@@ -20,8 +19,11 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "electionbackend-production.up.railway.app",  # backend domain
+    "electionbackend-production.up.railway.app",  # your backend domain
 ]
+
+# Fix HTTPS behind Railway proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ==============================
 # INSTALLED APPS
@@ -210,3 +212,4 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
