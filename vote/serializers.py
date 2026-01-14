@@ -60,6 +60,8 @@ class PartyVoteCountSerializer(serializers.ModelSerializer):
 # ==============================
 # Vote Serializer (Write Only)
 # ==============================
+
+
 class VoteSerializer(serializers.ModelSerializer):
     candidate_id = serializers.IntegerField(write_only=True)
 
@@ -72,28 +74,40 @@ class VoteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Candidate does not exist.")
         return value
 
-    def create(self, validated_data):
-        request = self.context.get("request")
-        user = getattr(request, "user", None)
+# class VoteSerializer(serializers.ModelSerializer):
+#     candidate_id = serializers.IntegerField(write_only=True)
 
-        if not user or not user.is_authenticated:
-            raise serializers.ValidationError("Authentication required.")
+#     class Meta:
+#         model = Vote
+#         fields = ["candidate_id"]
 
-        candidate = Candidate.objects.get(id=validated_data["candidate_id"])
+#     def validate_candidate_id(self, value):
+#         if not Candidate.objects.filter(id=value).exists():
+#             raise serializers.ValidationError("Candidate does not exist.")
+#         return value
 
-        # Prevent double voting per election
-        if Vote.objects.filter(user=user, election_type=candidate.election_type).exists():
-            raise serializers.ValidationError(
-                "You have already voted in this election."
-            )
+#     def create(self, validated_data):
+#         request = self.context.get("request")
+#         user = getattr(request, "user", None)
 
-        # Create vote
-        vote = Vote.objects.create(
-            user=user,
-            candidate=candidate,
-            election_type=candidate.election_type
-        )
-        return vote
+#         if not user or not user.is_authenticated:
+#             raise serializers.ValidationError("Authentication required.")
+
+#         candidate = Candidate.objects.get(id=validated_data["candidate_id"])
+
+#         # Prevent double voting per election
+#         if Vote.objects.filter(user=user, election_type=candidate.election_type).exists():
+#             raise serializers.ValidationError(
+#                 "You have already voted in this election."
+#             )
+
+#         # Create vote
+#         vote = Vote.objects.create(
+#             user=user,
+#             candidate=candidate,
+#             election_type=candidate.election_type
+#         )
+#         return vote
 
 
 

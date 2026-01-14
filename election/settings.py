@@ -79,8 +79,7 @@ TEMPLATES = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    
-    "https://election-frontend-oa92.vercel.app",
+    "https://www.voteng.live",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -105,12 +104,32 @@ CORS_ALLOW_HEADERS = [
 WSGI_APPLICATION = "election.wsgi.application"
 
 
+
+
 DATABASES = {
     "default": dj_database_url.config(
-        default=config("DATABASE_URL"),
-        conn_max_age=600
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
     )
 }
+
+import os
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("PGDATABASE"),
+        "USER": os.environ.get("PGUSER"),
+        "PASSWORD": os.environ.get("PGPASSWORD"),
+        "HOST": os.environ.get("PGHOST"),
+        "PORT": os.environ.get("PGPORT", "5432"),
+        "OPTIONS": {
+            "sslmode": "require",
+        },
+    }
+}
+
 
 
 AUTH_USER_MODEL = "accounts.User"
@@ -161,26 +180,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # }
 
 
-import os
-import socket
-
-REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1")
-
-# Check if the hostname can be resolved
-try:
-    host = REDIS_URL.split("://")[1].split(":")[0]
-    socket.gethostbyname(host)
-except Exception:
-    # Fallback to localhost if hostname fails
-    REDIS_URL = "redis://127.0.0.1:6379/1"
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URL,
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "LOCATION": os.environ.get("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
+
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
