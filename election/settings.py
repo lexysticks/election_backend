@@ -17,11 +17,11 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "election-backend-vmwv.onrender.com",
-    '*',
+    "todorailway-backend-production.up.railway.app",
 ]
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -31,7 +31,6 @@ INSTALLED_APPS = [
 
     # Third-party
     "rest_framework",
-    "corsheaders",
     "cloudinary",
     "cloudinary_storage",
     "drf_spectacular",
@@ -80,13 +79,16 @@ TEMPLATES = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://www.voteng.live",
+    "https://todorailway-backend-production.up.railway.app",
 ]
 
+
 CSRF_TRUSTED_ORIGINS = [
-   "https://election-frontend-oa92.vercel.app",
-    "https://election-backend-vmwv.onrender.com",
-    
+    "http://localhost:5173",
+    "https://www.voteng.live",
+    "https://todorailway-backend-production.up.railway.app",
 ]
+
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -105,16 +107,6 @@ WSGI_APPLICATION = "election.wsgi.application"
 
 
 
-
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
-
-import os
 
 DATABASES = {
     "default": {
@@ -209,3 +201,11 @@ REST_FRAMEWORK = {
 
 
 
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
