@@ -6,21 +6,26 @@ from decouple import config
 import cloudinary
 import dj_database_url
 
+# Load environment variables
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+# ==============================
+# SECURITY
+# ==============================
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "electionbackend-production.up.railway.app",
-    ".up.railway.app",
+    "electionbackend-production.up.railway.app",  # backend domain
 ]
 
+# ==============================
+# INSTALLED APPS
+# ==============================
 INSTALLED_APPS = [
     "corsheaders",
     "django.contrib.admin",
@@ -37,19 +42,22 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
-    'drf_yasg',
+    "drf_yasg",
 
     # Local apps
     "accounts",
     "vote",
 ]
 
-
+# ==============================
+# MIDDLEWARE (Cors MUST be first)
+# ==============================
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # MUST be first
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
+
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -57,9 +65,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-
 ROOT_URLCONF = "election.urls"
-
 
 TEMPLATES = [
     {
@@ -76,39 +82,11 @@ TEMPLATES = [
     },
 ]
 
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "https://www.voteng.live",
-    "https://todorailway-backend-production.up.railway.app",
-]
-
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "https://www.voteng.live",
-    "https://todorailway-backend-production.up.railway.app",
-]
-
-
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
-
 WSGI_APPLICATION = "election.wsgi.application"
 
-
-
-
+# ==============================
+# DATABASE (PostgreSQL with SSL)
+# ==============================
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -123,15 +101,14 @@ DATABASES = {
     }
 }
 
-
-
+# ==============================
+# AUTHENTICATION
+# ==============================
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = [
     "accounts.auth_backend.NationalIDBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-
-
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -141,10 +118,11 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-
+# ==============================
+# STATIC & MEDIA (Cloudinary)
+# ==============================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 cloudinary.config(
@@ -154,25 +132,9 @@ cloudinary.config(
 )
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# CACHES = {
-#     "default": {
-#         "BACKEND": "django_redis.cache.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379/1",
-#         "OPTIONS": {
-#             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-#         }
-#     }
-# }
-
-
+# ==============================
+# CACHES (Redis)
+# ==============================
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -183,7 +145,9 @@ CACHES = {
     }
 }
 
-
+# ==============================
+# REST FRAMEWORK
+# ==============================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -200,7 +164,22 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 5,
 }
 
+# ==============================
+# CORS & CSRF (frontend only)
+# ==============================
+CORS_ALLOW_ALL_ORIGINS = False
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",      # dev frontend
+    "https://www.voteng.live",    # production frontend
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "https://www.voteng.live",
+]
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_METHODS = [
     "DELETE",
@@ -210,3 +189,24 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# ==============================
+# LANGUAGE / TIME
+# ==============================
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
