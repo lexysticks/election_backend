@@ -1,5 +1,26 @@
 from rest_framework import serializers
 from .models import Candidate, PartyVoteCount, Vote
+from django.conf import settings
+
+
+# ==============================
+# SHARED SAFE IMAGE HELPER
+# ==============================
+def safe_image_url(request, url):
+    """
+    Try https first, fallback to http, else placeholder
+    """
+    if not url:
+        return "/placeholder.png"
+
+    # Absolute URL
+    absolute_url = request.build_absolute_uri(url)
+
+    if absolute_url.startswith("http://"):
+        return absolute_url.replace("http://", "https://")
+
+    return absolute_url
+
 
 # ==============================
 # Candidate Serializer
@@ -25,20 +46,26 @@ class CandidateSerializer(serializers.ModelSerializer):
         ]
 
     def get_image_url(self, obj):
-        # Return candidate image URL or placeholder
-        return obj.image.url if obj.image else "/placeholder.png"
+        request = self.context.get("request")
+
+        if obj.image and obj.image.url:
+            return safe_image_url(request, obj.image.url)
+
+        return "/placeholder.png"
 
     def get_party_image_url(self, obj):
-        # Return party logo URL or placeholder
-        return obj.party_image.url if obj.party_image else "/placeholder.png"
+        request = self.context.get("request")
+
+        if obj.party_image and obj.party_image.url:
+            return safe_image_url(request, obj.party_image.url)
+
+        return "/placeholder.png"
 
     def get_party_votes(self, obj):
-        # Use pre-fetched party_votes from context
         party_votes = self.context.get("party_votes", {})
         return party_votes.get((obj.election_type, obj.party), 0)
 
     def get_user_voted(self, obj):
-        # Use pre-fetched user_votes set from context
         user_votes = self.context.get("user_votes", set())
         return obj.id in user_votes
 
@@ -54,14 +81,17 @@ class PartyVoteCountSerializer(serializers.ModelSerializer):
         fields = ["party", "vote_count", "election_type", "party_image_url"]
 
     def get_party_image_url(self, obj):
-        return obj.party_image.url if obj.party_image else "/placeholder.png"
+        request = self.context.get("request")
+
+        if obj.party_image and obj.party_image.url:
+            return safe_image_url(request, obj.party_image.url)
+
+        return "/placeholder.png"
 
 
 # ==============================
 # Vote Serializer (Write Only)
 # ==============================
-
-
 class VoteSerializer(serializers.ModelSerializer):
     candidate_id = serializers.IntegerField(write_only=True)
 
@@ -73,44 +103,6 @@ class VoteSerializer(serializers.ModelSerializer):
         if not Candidate.objects.filter(id=value).exists():
             raise serializers.ValidationError("Candidate does not exist.")
         return value
-
-# class VoteSerializer(serializers.ModelSerializer):
-#     candidate_id = serializers.IntegerField(write_only=True)
-
-#     class Meta:
-#         model = Vote
-#         fields = ["candidate_id"]
-
-#     def validate_candidate_id(self, value):
-#         if not Candidate.objects.filter(id=value).exists():
-#             raise serializers.ValidationError("Candidate does not exist.")
-#         return value
-
-#     def create(self, validated_data):
-#         request = self.context.get("request")
-#         user = getattr(request, "user", None)
-
-#         if not user or not user.is_authenticated:
-#             raise serializers.ValidationError("Authentication required.")
-
-#         candidate = Candidate.objects.get(id=validated_data["candidate_id"])
-
-#         # Prevent double voting per election
-#         if Vote.objects.filter(user=user, election_type=candidate.election_type).exists():
-#             raise serializers.ValidationError(
-#                 "You have already voted in this election."
-#             )
-
-#         # Create vote
-#         vote = Vote.objects.create(
-#             user=user,
-#             candidate=candidate,
-#             election_type=candidate.election_type
-#         )
-#         return vote
-
-
-
 
 
 
@@ -143,22 +135,21 @@ class VoteSerializer(serializers.ModelSerializer):
 #         ]
 
 #     def get_image_url(self, obj):
-#         return obj.image.url if obj.image else None
+#         # If image exists, force HTTPS if needed; else fallback to placeholder
+#         if obj.image and obj.image.url:
+#             return obj.image.url.replace("http://", "https://")
+#         return "/placeholder.png"
 
 #     def get_party_image_url(self, obj):
-#         return obj.party_image.url if obj.party_image else None
+#         if obj.party_image and obj.party_image.url:
+#             return obj.party_image.url.replace("http://", "https://")
+#         return "/placeholder.png"
 
 #     def get_party_votes(self, obj):
-#         """
-#         Uses precomputed party_votes from view context for performance
-#         """
 #         party_votes = self.context.get("party_votes", {})
 #         return party_votes.get((obj.election_type, obj.party), 0)
 
 #     def get_user_voted(self, obj):
-#         """
-#         Returns True only if the current user voted for THIS candidate.
-#         """
 #         user_votes = self.context.get("user_votes", set())
 #         return obj.id in user_votes
 
@@ -171,19 +162,16 @@ class VoteSerializer(serializers.ModelSerializer):
 
 #     class Meta:
 #         model = PartyVoteCount
-#         fields = [
-#             "party",
-#             "vote_count",
-#             "election_type",
-#             "party_image_url",
-#         ]
+#         fields = ["party", "vote_count", "election_type", "party_image_url"]
 
 #     def get_party_image_url(self, obj):
-#         return obj.party_image.url if obj.party_image else None
+#         if obj.party_image and obj.party_image.url:
+#             return obj.party_image.url.replace("http://", "https://")
+#         return "/placeholder.png"
 
 
 # # ==============================
-# # Vote Serializer (WRITE ONLY)
+# # Vote Serializer (Write Only)
 # # ==============================
 # class VoteSerializer(serializers.ModelSerializer):
 #     candidate_id = serializers.IntegerField(write_only=True)
@@ -197,22 +185,24 @@ class VoteSerializer(serializers.ModelSerializer):
 #             raise serializers.ValidationError("Candidate does not exist.")
 #         return value
 
-#     def create(self, validated_data):
-#         request = self.context.get("request")
-#         user = getattr(request, "user", None)
 
-#         if not user or not user.is_authenticated:
-#             raise serializers.ValidationError("Authentication required.")
 
-#         candidate = Candidate.objects.get(id=validated_data["candidate_id"])
 
-#         # Prevent double voting per election
-#         if Vote.objects.filter(user=user, election_type=candidate.election_type).exists():
-#             raise serializers.ValidationError("You have already voted in this election.")
 
-#         vote = Vote.objects.create(
-#             user=user,
-#             candidate=candidate,
-#             election_type=candidate.election_type
-#         )
-#         return vote
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
