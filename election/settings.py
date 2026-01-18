@@ -19,10 +19,11 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "electionbackend-production.up.railway.app",  # your backend domain
+    "electionbackend-production.up.railway.app",
+     
 ]
 
-# Fix HTTPS behind Railway proxy
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ==============================
@@ -51,11 +52,9 @@ INSTALLED_APPS = [
     "vote",
 ]
 
-# ==============================
-# MIDDLEWARE (Cors MUST be first)
-# ==============================
+
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # MUST be first
+    "corsheaders.middleware.CorsMiddleware",  
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
 
@@ -169,55 +168,20 @@ REST_FRAMEWORK = {
 # ==============================
 # CORS & CSRF (frontend only)
 # ==============================
-# ==============================
-# CORS & CSRF (TESTING ONLY)
-# ==============================
-
-# Allow all origins (equivalent to "*")
-CORS_ALLOW_ALL_ORIGINS = True
-
-# IMPORTANT:
-# When using "*", credentials MUST be disabled
-CORS_ALLOW_CREDENTIALS = False
-
-# CSRF (still needed for admin & forms)
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "https://www.voteng.live",
-]
-
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
 
 
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:5173",      # dev frontend
-#     "https://www.voteng.live",    # production frontend
+#     "https://voteng.live",    # production frontend
 # ]
+CORS_ALLOW_ALL_ORIGINS = True
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "http://localhost:5173",
-#     "https://www.voteng.live",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "https://voteng.live",
+]
 
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ALLOW_METHODS = [
 #     "DELETE",
