@@ -19,12 +19,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "electionbackend-production.up.railway.app",
-     
-]
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "election-backend-1-4qgb.onrender.com"]
+
 
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
