@@ -4,6 +4,9 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from decouple import config
 import cloudinary
+import dj_database_url
+import os
+
 
 # Load environment variables
 load_dotenv()
@@ -91,17 +94,14 @@ WSGI_APPLICATION = "election.wsgi.application"
 # ==============================
 # DATABASE (PostgreSQL with SSL)
 # ==============================
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("PGDATABASE"),
-        "USER": os.environ.get("PGUSER"),
-        "PASSWORD": os.environ.get("PGPASSWORD"),
-        "HOST": os.environ.get("PGHOST"),
-        "PORT": os.environ.get("PGPORT", "5432"),
-        "OPTIONS": {
-            "sslmode": "require",
-        },
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -139,15 +139,7 @@ DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 # ==============================
 # CACHES (Redis)
 # ==============================
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
+
 
 # ==============================
 # REST FRAMEWORK
