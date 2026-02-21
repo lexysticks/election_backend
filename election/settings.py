@@ -102,6 +102,12 @@ DATABASES = {
     }
 }
 
+
+
+DATABASES = {
+    "default": dj_database_url.parse(os.getenv("DATABASE_URL"))
+}
+
 # ==============================
 # AUTHENTICATION
 # ==============================
@@ -164,14 +170,14 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",      # dev frontend
-    "https://www.voteng.live",    # production frontend
+    # "https://www.voteng.live",    # production frontend
     "https://election-frontend-oa92.vercel.app",
 ]
 # CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
-    "https://www.voteng.live",
+    # "https://www.voteng.live",
     "https://election-frontend-oa92.vercel.app",
 ]
 
