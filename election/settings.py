@@ -20,7 +20,14 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=True, cast=bool)
 
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "election-backend-1-4qgb.onrender.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "election-backend-vmwv.onrender.com",
+    "election-backend-1-4qgb.onrender.com",
+    "voteng.live",
+    "www.voteng.live"
+]
 
 
 
