@@ -175,19 +175,19 @@ REST_FRAMEWORK = {
 # ==============================
 
 
+
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",      # dev frontend
-    # "https://www.voteng.live",    # production frontend
+    "http://localhost:5173",
     "https://election-frontend-oa92.vercel.app",
+    "https://www.voteng.live",           
 ]
-# CORS_ALLOW_ALL_ORIGINS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
-    # "https://www.voteng.live",
     "https://election-frontend-oa92.vercel.app",
+    "https://www.voteng.live",          
 ]
-
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ALLOW_METHODS = [
