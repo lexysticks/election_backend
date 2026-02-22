@@ -17,17 +17,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 # ==============================
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "election-backend-vmwv.onrender.com",
-    "election-backend-1-4qgb.onrender.com",
-    "voteng.live",
-    "www.voteng.live"
-]
+
 
 
 
@@ -102,12 +95,6 @@ WSGI_APPLICATION = "election.wsgi.application"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 
@@ -173,7 +160,14 @@ REST_FRAMEWORK = {
 # ==============================
 # CORS & CSRF (frontend only)
 # ==============================
-
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "election-backend-vmwv.onrender.com",
+    "election-backend-1-4qgb.onrender.com",
+    "voteng.live",
+    "www.voteng.live"
+]
 
 
 
